@@ -11,6 +11,7 @@ def get_minibatch(imdb, num_classes, im_size):
     bbox_reg_target = list()
     for i in range(num_images):
         im = cv2.imread(imdb[i]['image'])
+        im = cv2.resize(im,(im_size, im_size))
         h, w, c = im.shape
         cls = imdb[i]['label']
         bbox_target = imdb[i]['bbox_target']

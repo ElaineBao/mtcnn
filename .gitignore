@@ -1,1 +1,5 @@
 *.pyc
+*.jpg
+*.png
+*.gitignore
+*.DS_Store

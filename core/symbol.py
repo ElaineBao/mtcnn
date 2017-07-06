@@ -22,7 +22,7 @@ def P_Net(mode='train'):
     prelu3 = mx.symbol.LeakyReLU(data=conv3, act_type="prelu", name="prelu3")
 
     conv4_1 = mx.symbol.Convolution(data=prelu3, kernel=(1, 1), num_filter=2, name="conv4_1")
-    conv4_2 = mx.symbol.Convolution(data=prelu3, kernel=(1, 1), num_filter=4, name="conv4_2")
+    conv4_2 = mx.symbol.Convolution(data=prelu3, kernel=(1, 1), num_filter=8, name="conv4_2")
 
     if mode == 'test':
         cls_prob = mx.symbol.SoftmaxActivation(data=conv4_1, mode="channel", name="cls_prob")
@@ -33,7 +33,7 @@ def P_Net(mode='train'):
         cls_prob = mx.symbol.SoftmaxOutput(data=conv4_1, label=label,
                                            multi_output=True, use_ignore=True,
                                            out_grad=True, name="cls_prob")
-        conv4_2_reshape = mx.symbol.Reshape(data = conv4_2, shape=(-1, 4), name="conv4_2_reshape")
+        conv4_2_reshape = mx.symbol.Reshape(data = conv4_2, shape=(-1, 8), name="conv4_2_reshape")
         bbox_pred = mx.symbol.LinearRegressionOutput(data=conv4_2_reshape, label=bbox_target,
                                                      grad_scale=1, out_grad=True, name="bbox_pred")
 
@@ -68,7 +68,7 @@ def R_Net(mode='train'):
     prelu4 = mx.symbol.LeakyReLU(data=fc1, act_type="prelu", name="prelu4")
 
     fc2 = mx.symbol.FullyConnected(data=prelu4, num_hidden=2, name="fc2")
-    fc3 = mx.symbol.FullyConnected(data=prelu4, num_hidden=4, name="fc3")
+    fc3 = mx.symbol.FullyConnected(data=prelu4, num_hidden=8, name="fc3")
 
     cls_prob = mx.symbol.SoftmaxOutput(data=fc2, label=label, use_ignore=True,
                                        out_grad=True, name="cls_prob")
@@ -115,7 +115,7 @@ def O_Net(mode="train"):
     prelu5 = mx.symbol.LeakyReLU(data=fc1, act_type="prelu", name="prelu5")
 
     fc2 = mx.symbol.FullyConnected(data=prelu5, num_hidden=2, name="fc2")
-    fc3 = mx.symbol.FullyConnected(data=prelu5, num_hidden=4, name="fc3")
+    fc3 = mx.symbol.FullyConnected(data=prelu5, num_hidden=8, name="fc3")
 
     cls_prob = mx.symbol.SoftmaxOutput(data=fc2, label=label, use_ignore=True, out_grad=True, name="cls_prob")
     if mode == "test":

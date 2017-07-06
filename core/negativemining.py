@@ -13,9 +13,9 @@ class NegativeMiningOperator(mx.operator.CustomOp):
 
     def forward(self, is_train, req, in_data, out_data, aux):
         cls_prob = in_data[0].asnumpy() # batchsize x 2 x 1 x 1
-        bbox_pred = in_data[1].asnumpy() # batchsize x 4
+        bbox_pred = in_data[1].asnumpy() # batchsize x 8
         label = in_data[2].asnumpy().astype(int) # batchsize x 1
-        bbox_target = in_data[3].asnumpy() # batchsize x 4
+        bbox_target = in_data[3].asnumpy() # batchsize x 8
 
         self.assign(out_data[0], req[0], in_data[0])
         self.assign(out_data[1], req[1], in_data[1])
@@ -59,7 +59,7 @@ class NegativeMiningOperator(mx.operator.CustomOp):
         bbox_keep = out_data[3].asnumpy().reshape(-1, 1)
 
         cls_grad = np.repeat(cls_keep, 2, axis=1)
-        bbox_grad = np.repeat(bbox_keep, 4, axis=1)
+        bbox_grad = np.repeat(bbox_keep, 8, axis=1)
 
         cls_grad /= len(np.where(cls_keep == 1)[0])
         bbox_grad /= len(np.where(bbox_keep == 1)[0])

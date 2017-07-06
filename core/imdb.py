@@ -5,17 +5,18 @@ import numpy as np
 from config import config
 
 class IMDB(object):
-    def __init__(self, name, image_set, root_path, dataset_path, mode='train'):
-        self.name = name + '_' + image_set
+    def __init__(self, dataset, image_set, root_path, positive_dataset_path, negative_dataset_path):
+        self.name = dataset + '_' + image_set
         self.image_set = image_set
         self.root_path = root_path
-        self.data_path = dataset_path
-        self.mode = mode
+        self.positive_data_path = positive_dataset_path
+        self.negative_data_path = negative_dataset_path
 
-        self.classes = ['__background__', 'face']
+        self.classes = ['__background__', 'idcard_frontal']
         self.num_classes = 2
-        self.image_set_index = self.load_image_set_index()
-        self.num_images = len(self.image_set_index)
+        self.positive_image_set_index = self.load_image_set_index(self.positive_data_path)
+        self.negative_image_set_index = self.load_image_set_index(self.negative_data_path)
+        self.num_images = len(self.positive_image_set_index) + len(self.negative_image_set_index)
 
 
     @property
@@ -35,7 +36,7 @@ class IMDB(object):
         return cache_path
 
 
-    def load_image_set_index(self):
+    def load_image_set_index(self, data_path):
         """Get image index
 
         Parameters:
@@ -45,7 +46,7 @@ class IMDB(object):
         image_set_index: str
             relative path of image
         """
-        image_set_index_file = os.path.join(self.data_path, 'imglists', self.image_set + '.txt')
+        image_set_index_file = os.path.join(data_path, 'imglists', self.image_set + '.txt')
         assert os.path.exists(image_set_index_file), 'Path does not exist: {}'.format(image_set_index_file)
         with open(image_set_index_file, 'r') as f:
             image_set_index = [x.strip().split(' ')[0] for x in f.readlines()]
@@ -68,13 +69,14 @@ class IMDB(object):
                 imdb = cPickle.load(f)
             print '{} gt imdb loaded from {}'.format(self.name, cache_file)
             return imdb
-        gt_imdb = self.load_annotations()
+        positive_gt_imdb = self.load_annotations(positive = True)
+        negative_gt_imdb = self.load_annotations(positive = False)
         with open(cache_file, 'wb') as f:
-            cPickle.dump(gt_imdb, f, cPickle.HIGHEST_PROTOCOL)
-        return gt_imdb
+            cPickle.dump([positive_gt_imdb, negative_gt_imdb], f, cPickle.HIGHEST_PROTOCOL)
+        return positive_gt_imdb, negative_gt_imdb
 
 
-    def image_path_from_index(self, index):
+    def image_path_from_index(self, index, positive = True):
         """Given image index, return full path
 
         Parameters:
@@ -86,14 +88,20 @@ class IMDB(object):
         image_file: str
             full path of image
         """
-        image_file = os.path.join(self.data_path, 'images', index)
+        """
+        if positive:
+            image_file = os.path.join(self.positive_data_path, 'images', index)
+        else:
+            image_file = os.path.join(self.negative_data_path, 'images', index)
+        """
+        image_file = index
         if "." not in image_file:
-            image_file = image_file + '.jpg'
+            image_file = image_file + '.JPEG'
         assert os.path.exists(image_file), 'Path does not exist: {}'.format(image_file)
         return image_file
 
 
-    def load_annotations(self):
+    def load_annotations(self, positive = True):
         """Load annotations
 
         Parameters:
@@ -103,29 +111,31 @@ class IMDB(object):
         imdb: dict
             image database with annotations
         """
-        annotation_file = os.path.join(self.data_path, 'imglists', self.image_set + '.txt')
+        if positive:
+            annotation_file = os.path.join(self.positive_data_path, 'imglists', self.image_set + '.txt')
+            num_images = len(self.positive_image_set_index)
+        else:
+            annotation_file = os.path.join(self.negative_data_path, 'imglists', self.image_set + '.txt')
+            num_images = len(self.negative_image_set_index)
         assert os.path.exists(annotation_file), 'annotations not found at {}'.format(annotation_file)
         with open(annotation_file, 'r') as f:
             annotations = f.readlines()
 
         imdb = []
-        for i in range(self.num_images):
+        for i in range(num_images):
             annotation = annotations[i].strip().split(' ')
             index = annotation[0]
-            im_path = self.image_path_from_index(index)
+            im_path = self.image_path_from_index(index, positive = positive)
             imdb_ = dict()
             imdb_['image'] = im_path
-            if self.mode == 'test':
-#                gt_boxes = map(float, annotation[1:])
-#                boxes = np.array(bbox, dtype=np.float32).reshape(-1, 4)
-#                imdb_['gt_boxes'] = boxes
+            if self.image_set == 'test':
                 pass
             else:
                 label = annotation[1]
                 imdb_['label'] = int(label)
                 imdb_['flipped'] = False
-                imdb_['bbox_target'] = np.zeros((4,))
-                if len(annotation[2:]) == 4:
+                imdb_['bbox_target'] = np.zeros((8,))
+                if len(annotation[2:]) == 8:
                     bbox_target = annotation[2:]
                     imdb_['bbox_target'] = np.array(bbox_target).astype(float)
 

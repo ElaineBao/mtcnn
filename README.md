@@ -8,6 +8,9 @@ this repository is the implementation of MTCNN in MXnet
 
 ## Useful information
 You're required to modify mxnet/src/regression_output-inl.h according to mxnet_diff.patch before using the code for training.
+`cp regression_output-inl.h YOUR_MXNET_ROOT/src/operator/regression_output-inl.h`
+then recompile mxnet
+`make clean && make -j 4 USE_DIST_KVSTORE=1 USE_CUDA=1 USE_CUDA_PATH=/usr/local/cuda USE_CUDNN=1`
 
 * Dataset format
 The images used for training are stored in ./data/dataset_name/images/ 
