@@ -78,6 +78,7 @@ class ImageLoader(mx.io.DataIter):
         self.im_size = im_size
         self.shuffle = shuffle
         self.ctx = ctx
+
         if self.ctx is None:
             self.ctx = [mx.cpu()]
         self.work_load_list = work_load_list
@@ -220,6 +221,6 @@ class ImageLoader(mx.io.DataIter):
             all_label[key] = tensor_vstack([batch[key] for batch in label_list])
 
         self.data = [mx.nd.array(all_data['data'])]
-        self.label = [mx.nd.array(all_label[name]) for name in self.label_name]
+        self.label = [mx.nd.array(all_label[name]) for name in self.label_names]
 
 

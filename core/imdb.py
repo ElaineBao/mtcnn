@@ -5,7 +5,7 @@ import numpy as np
 from config import config
 
 class IMDB(object):
-    def __init__(self, dataset, image_set, root_path, positive_dataset_path, negative_dataset_path):
+    def __init__(self, dataset, image_set, root_path, positive_dataset_path, negative_dataset_path, coord_exchange = False):
         self.name = dataset + '_' + image_set
         self.image_set = image_set
         self.root_path = root_path
@@ -17,6 +17,7 @@ class IMDB(object):
         self.positive_image_set_index = self.load_image_set_index(self.positive_data_path)
         self.negative_image_set_index = self.load_image_set_index(self.negative_data_path)
         self.num_images = len(self.positive_image_set_index) + len(self.negative_image_set_index)
+        self.coord_exchange = coord_exchange  # coord_exchange means if the image is upside down, use its left-bottom corner to be top-left corner
 
 
     @property
@@ -102,6 +103,24 @@ class IMDB(object):
 
 
     def load_annotations(self, positive = True):
+        def coordinates_exchange(coordinates):
+            x_axises = coordinates[0:8:2]
+            y_axises = coordinates[1:8:2]
+            mul = []
+            for idx, x_axis in enumerate(x_axises):
+                mul.append(x_axis * y_axises[idx])
+            sorted_idx = sorted(range(len(mul)), key=lambda k: mul[k])
+            sorted_idx = sorted_idx[0] # get smallest product, which is the top-left coorner
+            coordinates_new = coordinates[2 * sorted_idx: 2* sorted_idx + 2]
+            idx = sorted_idx + 1
+            while idx != sorted_idx:
+                if idx > 4:
+                    idx = 0
+                coordinates_new.append(coordinates[2 * idx: 2* idx + 2])
+            print coordinates_new
+            return coordinates_new
+
+
         """Load annotations
 
         Parameters:
@@ -137,10 +156,13 @@ class IMDB(object):
                 imdb_['bbox_target'] = np.zeros((8,))
                 if len(annotation[2:]) == 8:
                     bbox_target = annotation[2:]
+                    if self.coord_exchange:
+                        bbox_target = coordinates_exchange(bbox_target)
                     imdb_['bbox_target'] = np.array(bbox_target).astype(float)
 
             imdb.append(imdb_)
         return imdb
+
 
 
     def append_flipped_images(self, imdb):

@@ -27,7 +27,7 @@ default.frequent = 200
 
 
 default.pnet = edict()
-default.pnet.train_size = 12
+default.pnet.train_size = 128
 default.pnet.pretrained = 'model/pnet'
 default.pnet.pretrained_epoch = 0
 default.pnet.prefix = 'model/pnet'

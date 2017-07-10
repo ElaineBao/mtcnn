@@ -8,7 +8,7 @@ from config import default
 def train_P_net(dataset, image_set, root_path, positive_dataset_path, negative_dataset_path,
                 prefix, ctx, pretrained, epoch, begin_epoch,
                 end_epoch, frequent, lr, resume):
-    imdb = IMDB(dataset, image_set, root_path, positive_dataset_path, negative_dataset_path)
+    imdb = IMDB(dataset, image_set, root_path, positive_dataset_path, negative_dataset_path, coord_exchange = True)
     positive_gt_imdb, negative_gt_imdb = imdb.gt_imdb()
     # gt_imdb = imdb.append_flipped_images(gt_imdb)
     sym = P_Net()
